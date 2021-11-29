@@ -15,7 +15,7 @@ start:
 	ldi r16,LOW(RAMEND)
 	out SPL,r16
 
-	RCALL NeoPixel_Init
+	RCALL NeoPixel_Init; General initialization tasks
 	RCALL AD_Init
 	LDI R24, 25
 	RCALL delay
@@ -24,7 +24,7 @@ while:
     RCALL Clear_Pixels
     RCALL Read_Light
 	;LDI R24,100
-	MOV R17,R24
+	MOV R17,R24; Loop counter of 25
 	ANDI R17,0x3F
 	LDI R16,39
 	MUL R17,R16
@@ -157,15 +157,15 @@ NeoPixel_Init:
 	; set PB0 to an output, initial value is '0'
 	CBI 5,0
 	SBI 4,0
-	LDI R26, low(NeoPixel_Array)
-	LDI R27, high(NeoPixel_Array)
-	LDI R30, low(NP_Init_values<<1)
-	LDI R31, high(NP_Init_values<<1)
+	LDI R26, low(NeoPixel_Array); Corresponds to XL
+	LDI R27, high(NeoPixel_Array); Corresponds to XH
+	LDI R30, low(NP_Init_values<<1); Corresponds to ZL
+	LDI R31, high(NP_Init_values<<1); Corresponds to ZH
 	LDI R24, 30
 ; Loops through and sets each pixel
 NP_For_Loop:
-	LPM R16,Z+
-	ST X+,R16
+	LPM R16,Z+; Get location of Z
+	ST X+,R16; Transfer value of Z
 	DEC R24
 	BRNE NP_For_Loop; If all rgb values for pixels are set, branch
 	RCALL Update_Pixels
@@ -254,7 +254,7 @@ byte_loop:
 next_bit:
 	SBI 5,0
 	ROL R22
-	BRCS send_one
+	BRCS send_one; Branch if c = 1
 ; send_zero:
 ;	LDI R21,2           ; 7 clock cycles high
 ;wait_zero_high:
@@ -283,6 +283,7 @@ exit_zero:
 	BRNE next_bit
 	RET	
 
+; For light and temperature sensor initializations
 AD_Init:
     PUSH R16
 	LDI R16,0x96     ; Enable='1', Start ='0', Auto-Trigger='0', Flag='1' (to clear flag), IE='0' (disabled), Prescale=clock/64
@@ -328,14 +329,15 @@ RT_while_1:
 	POP R16
 	RET
 
+; Delay for about 1.6 million machine cycles
 delay:
-   PUSH R24
+   PUSH R24; Initial value of 25
    PUSH R18
    PUSH R17
 d1:
-    LDI R17,0xFF
+    LDI R17,0xFF; Value of 255
 d2:
-	LDI R18,0xFF
+	LDI R18,0xFF; Value of 255
 d3:
 	DEC R18
 	BRNE d3
