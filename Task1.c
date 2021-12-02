@@ -22,10 +22,15 @@ void sendOne();
 
 
 int main(){
-	DDRB = 0x00;
-	PORTB = 0;
+	DDRB |= (1<<0);
+	PORTB &= 0;
 	
 	initNeo();
+	
+	while(1)
+	{
+		allRed();
+	}
 	
 	return 0;
 }
@@ -35,7 +40,7 @@ void initNeo(){
 		neoPixels[i] = initValues[i]; // Mirrors functionality of assembly
 	}
 	
-	// sendPixels(neoPixels);
+	// updatePixels();
 	
 }
 
@@ -43,6 +48,7 @@ void clearPixels(){
 	for(int i = 0; i < 30; i++){
 		neoPixels[i] = 0;
 	}
+	
 }
 
 void updatePixels(){
@@ -57,9 +63,9 @@ void updatePixels(){
 }
 
 void sendPixels(unsigned char R, unsigned char G, unsigned char B){
-	byteLoop(R);
-	byteLoop(G);
-	byteLoop(B);
+	nextBit(R);
+	nextBit(G);
+	nextBit(B);
 }
 
 void byteLoop(unsigned char colorVal){
@@ -143,6 +149,21 @@ void sendOne()
 
 }
 
+void allGreen()
+{
+	sendPixels(64, 0, 0);
+}
+
+void allRed()
+{
+	sendPixels(0, 64, 0);
+}
+
+void allBlue()
+{
+	sendPixels(0,0,64);
+}
+
 void sendZero()
 {
 	PORTB &= 0b00000000;	
@@ -157,7 +178,3 @@ void sendZero()
 	TCCR0A = 0;
 	TIFR0 = 0x1;
 }
-
-/*void delay(){
-	
-}*/
