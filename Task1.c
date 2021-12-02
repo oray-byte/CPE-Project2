@@ -80,6 +80,52 @@ void byteLoop(unsigned char colorVal){
 	}
 }
 
+void nextBit(unsigned char color)
+{
+	for(int i = 7; i >= 0; i--)
+	{
+		if(color & (1 << i)) // Check if the i'th bit is set using bitmasking
+		{
+			PORTB = 0x01;
+			TCNT0 = -14;
+			
+			TCCR0A = 0x00;
+			TCCR0B = 0x01;
+			
+			while(TIFR0 & (1<<TOV0) == 0); // Wait until overflow flag is set (14 clock cycles)
+			
+			PORTB = 0x00; // Set PORTb low
+			
+			// Initialize the timer in normal mode with no prescaling
+			TCCR0A = 0x00;
+			TCCR0B = 0x01;
+			
+			TIFR0 = 1 << TOV0;
+			
+		}
+		else 
+		{
+			PORTB = 0x01; // Dr. Stanley told us about how this instruction was required for this to work
+			PORTB = 0x00;
+			
+			// Initialize the timer with no prescaling in normal mode
+			TCNT0 = -14; 
+			TCCR0A = 0x00;
+			TCCR0B = 0x01; 
+			
+			 while((TIFR0 & (1 << TOV0)) == 0); // Run until overflow
+			 
+			 TCCR0A = 0x00;
+			 TCCR0B = 0x00;
+			 
+			 TIFR0 = 1 << TOV0;
+			
+		}
+		
+	}
+	
+}
+
 
 void sendOne()
 {
@@ -87,7 +133,8 @@ void sendOne()
 	
 	// Put 14 clock cycle high timer here
 	TCNT0 = -14;
-	TCCR0A = 0x01;
+	TCCR0A = 0x00;
+	TCCR0B = 0x01;
 	
 	while((TIFR0 & (1 << TOV0)) == 0);
 	
@@ -102,7 +149,8 @@ void sendZero()
 	
 	// Put 7 clock cycle low timer here
 	TCNT0 = -7;
-	TCCR0A = 0x01;
+	TCCR0A = 0x00;
+	TCCR0B = 0x01;
 	
 	while((TIFR0 & (1 << TOV0)) == 0);
 	
