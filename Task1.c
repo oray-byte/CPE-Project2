@@ -92,7 +92,7 @@ void nextBit(unsigned char color)
 			TCCR0A = 0x00;
 			TCCR0B = 0x01;
 			
-			while(TIFR0 & (1<<TOV0) == 0); // Wait until overflow flag is set (14 clock cycles)
+			while((TIFR0 & (1<<TOV0)) == 0); // Wait until overflow flag is set (14 clock cycles)	
 			
 			PORTB = 0x00; // Set PORTb low
 			
