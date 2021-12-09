@@ -35,7 +35,7 @@ int main() {
 	initNeo();
 	
 	while(1) {
-		strobe();
+		emitSound();
 	}
 	
 	
@@ -62,12 +62,20 @@ void stopTimer() {
 }
 
 void emitSound() {
-	
+	PORTD |= 0b00010000;
+	soundDelay();
+	PORT |= 0b00000000;
+	soundDelay();
 }
 
 void soundDelay() {
-	
+	TCNT0 = 0xC1;
+	TCCR0 = 0x03;
+
+	while (!(TIFR & (1<<TOV0)) == 0);
+	TIFR = 0x01;
 }
+
 void strobe() {
 		allRed();
 		delay();
