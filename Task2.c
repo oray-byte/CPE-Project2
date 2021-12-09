@@ -27,16 +27,14 @@ void stopTimer();
 void emitSound();
 
 
-int main(){
+int main() {
 	DDRB |= (1<<0);
 	PORTB &= 0;
-	DDRD &= 0b00000000; //Speaker on PD4
-	PORTD |= 0b00010000;
-	
+	DDRD |= 0b00010000; //Speaker on PD4
 	
 	initNeo();
 	
-	while(1){
+	while(1) {
 		strobe();
 	}
 	
@@ -45,7 +43,7 @@ int main(){
 }
 
 
-void startTimer(){
+void startTimer() {
 	PORTB &= 0b00000000;
 	
 	// Put 7 clock cycle low timer here
@@ -59,16 +57,18 @@ void startTimer(){
 	TIFR0 = 0x1;
 }
 
-
-void stopTimer(){
+void stopTimer() {
 	
 }
 
-void emitSound(){
+void emitSound() {
 	
 }
 
-void strobe(){
+void soundDelay() {
+	
+}
+void strobe() {
 		allRed();
 		delay();
 		clearPixels();
@@ -83,7 +83,7 @@ void strobe(){
 		delay();
 }
 
-void delay(){
+void delay() {
 	PORTB = 0x01;
 	TCNT0 = -250;
 	
@@ -101,8 +101,7 @@ void delay(){
 	TIFR0 = 1 << TOV0;
 }
 
-
-void initNeo(){
+void initNeo() {
 	for(int i = 0; i < 30; i++){
 		neoPixels[i] = initValues[i]; // Mirrors functionality of assembly
 	}
@@ -111,7 +110,7 @@ void initNeo(){
 	
 }
 
-void clearPixels(){
+void clearPixels() {
 	for(int i = 0; i < 30; i++){
 		neoPixels[i] = 0;
 	}
@@ -119,7 +118,7 @@ void clearPixels(){
 	
 }
 
-void updatePixels(){
+void updatePixels() {
 	
 	for(int i = 0; i < 10; i++){
 		unsigned char R = neoPixels[3*i]; //Red
@@ -130,15 +129,13 @@ void updatePixels(){
 	}
 }
 
-void sendPixels(unsigned char R, unsigned char G, unsigned char B){
+void sendPixels(unsigned char R, unsigned char G, unsigned char B) {
 	nextBit(R);
 	nextBit(G);
 	nextBit(B);
 }
 
-
-void nextBit(unsigned char color)
-{
+void nextBit(unsigned char color) {
 	for(int i = 7; i >= 0; i--)
 	{
 		if(color & (1 << i)) // Check if the i'th bit is set using bitmasking
@@ -183,9 +180,7 @@ void nextBit(unsigned char color)
 	
 }
 
-
-void sendOne()
-{
+void sendOne() {
 	PORTB |= 0b00000001;
 	
 	// Put 14 clock cycle high timer here
@@ -200,29 +195,25 @@ void sendOne()
 
 }
 
-void allGreen()
-{
+void allGreen() {
 	for(int i = 0; i < 10; i++){
 		sendPixels(64, 0, 0);
 	}
 }
 
-void allRed()
-{
+void allRed() {
 	for(int i = 0; i < 10; i++){
 		sendPixels(0, 64, 0);
 	}
 }
 
-void allBlue()
-{
+void allBlue() {
 	for(int i = 0; i < 10; i++){
 		sendPixels(0,0,64);
 	}
 }
 
-void sendZero()
-{
+void sendZero() {
 	PORTB &= 0b00000000;	
 	
 	// Put 7 clock cycle low timer here
