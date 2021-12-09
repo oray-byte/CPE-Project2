@@ -1,7 +1,7 @@
 #include "avr/io.h"
 #include "avr/interrupt.h"
 
-					//R0    G0    B0,   R1    G1    B1,   R2    G2    B2,   R3    G3    B3,   R4    G4    B4,   R5    G5    B5,   R6    G6    B6,   R7    G7    B7,   R8    G8    B8,   R9    G9    B9
+//R0    G0    B0,   R1    G1    B1,   R2    G2    B2,   R3    G3    B3,   R4    G4    B4,   R5    G5    B5,   R6    G6    B6,   R7    G7    B7,   R8    G8    B8,   R9    G9    B9
 unsigned char initValues[] = {0x30, 0x00, 0x00, 0x30, 0x10, 0x00, 0x20, 0x20, 0x00, 0x10, 0x30, 0x00, 0x00, 0x30, 0x10, 0x00, 0x20, 0x20, 0x00, 0x10, 0x30, 0x00, 0x00, 0x30, 0x10, 0x00, 0x20, 0x20, 0x00, 0x10};
 unsigned char neoPixels[30];
 
@@ -27,25 +27,23 @@ void stopTimer();
 void emitSound();
 
 
-int main(){
+int main() {
 	DDRB |= (1<<0);
 	PORTB &= 0;
-	DDRD &= 0b00000000; //Speaker on PD4
-	PORTD |= 0b00010000;
-	
+	DDRC |= 0b01000000; //Speaker on PD6
 	
 	initNeo();
 	
-	while(1){
-		strobe();
+	while(1) {
+		emitSound();
+		//strobe();
 	}
-	
 	
 	return 0;
 }
 
 
-void startTimer(){
+void startTimer() {
 	PORTB &= 0b00000000;
 	
 	// Put 7 clock cycle low timer here
@@ -59,31 +57,42 @@ void startTimer(){
 	TIFR0 = 0x1;
 }
 
-
-void stopTimer(){
+void stopTimer() {
 	
 }
 
-void emitSound(){
-	
+void emitSound() {
+	PORTC |= 0b01000000;
+	soundDelay();	
+	PORTC &= 0b00000000;
+	soundDelay();
 }
 
-void strobe(){
-		allRed();
-		delay();
-		clearPixels();
-		delay();
-		allBlue();
-		delay();
-		clearPixels();
-		delay();
-		allGreen();
-		delay();
-		clearPixels();
-		delay();
+void soundDelay() {
+	TCNT0 = 0xC1;
+	TCCR0A = 0x00;
+	TCCR0B = 0x03;
+
+	while ((TIFR0 & (1<<TOV0)) == 0);
+	TIFR0 = 0x01;
 }
 
-void delay(){
+void strobe() {
+	allRed();
+	delay();
+	clearPixels();
+	delay();
+	allBlue();
+	delay();
+	clearPixels();
+	delay();
+	allGreen();
+	delay();
+	clearPixels();
+	delay();
+}
+
+void delay() {
 	PORTB = 0x01;
 	TCNT0 = -250;
 	
@@ -101,8 +110,7 @@ void delay(){
 	TIFR0 = 1 << TOV0;
 }
 
-
-void initNeo(){
+void initNeo() {
 	for(int i = 0; i < 30; i++){
 		neoPixels[i] = initValues[i]; // Mirrors functionality of assembly
 	}
@@ -111,7 +119,7 @@ void initNeo(){
 	
 }
 
-void clearPixels(){
+void clearPixels() {
 	for(int i = 0; i < 30; i++){
 		neoPixels[i] = 0;
 	}
@@ -119,7 +127,7 @@ void clearPixels(){
 	
 }
 
-void updatePixels(){
+void updatePixels() {
 	
 	for(int i = 0; i < 10; i++){
 		unsigned char R = neoPixels[3*i]; //Red
@@ -130,15 +138,13 @@ void updatePixels(){
 	}
 }
 
-void sendPixels(unsigned char R, unsigned char G, unsigned char B){
+void sendPixels(unsigned char R, unsigned char G, unsigned char B) {
 	nextBit(R);
 	nextBit(G);
 	nextBit(B);
 }
 
-
-void nextBit(unsigned char color)
-{
+void nextBit(unsigned char color) {
 	for(int i = 7; i >= 0; i--)
 	{
 		if(color & (1 << i)) // Check if the i'th bit is set using bitmasking
@@ -149,7 +155,7 @@ void nextBit(unsigned char color)
 			TCCR0A = 0x00;
 			TCCR0B = 0x01;
 			
-			while((TIFR0 & (1<<TOV0)) == 0); // Wait until overflow flag is set (14 clock cycles)	
+			while((TIFR0 & (1<<TOV0)) == 0); // Wait until overflow flag is set (14 clock cycles)
 			
 			PORTB = 0x00; // Set PORTb low
 			
@@ -160,22 +166,22 @@ void nextBit(unsigned char color)
 			TIFR0 = 1 << TOV0;
 			
 		}
-		else 
+		else
 		{
 			PORTB = 0x01; // Dr. Stanley told us about how this instruction was required for this to work
 			PORTB = 0x00;
 			
 			// Initialize the timer with no prescaling in normal mode
-			TCNT0 = -14; 
+			TCNT0 = -14;
 			TCCR0A = 0x00;
-			TCCR0B = 0x01; 
+			TCCR0B = 0x01;
 			
-			 while((TIFR0 & (1 << TOV0)) == 0); // Run until overflow
-			 
-			 TCCR0A = 0x00;
-			 TCCR0B = 0x00;
-			 
-			 TIFR0 = 1 << TOV0;
+			while((TIFR0 & (1 << TOV0)) == 0); // Run until overflow
+			
+			TCCR0A = 0x00;
+			TCCR0B = 0x00;
+			
+			TIFR0 = 1 << TOV0;
 			
 		}
 		
@@ -183,9 +189,7 @@ void nextBit(unsigned char color)
 	
 }
 
-
-void sendOne()
-{
+void sendOne() {
 	PORTB |= 0b00000001;
 	
 	// Put 14 clock cycle high timer here
@@ -200,30 +204,26 @@ void sendOne()
 
 }
 
-void allGreen()
-{
+void allGreen() {
 	for(int i = 0; i < 10; i++){
 		sendPixels(64, 0, 0);
 	}
 }
 
-void allRed()
-{
+void allRed() {
 	for(int i = 0; i < 10; i++){
 		sendPixels(0, 64, 0);
 	}
 }
 
-void allBlue()
-{
+void allBlue() {
 	for(int i = 0; i < 10; i++){
 		sendPixels(0,0,64);
 	}
 }
 
-void sendZero()
-{
-	PORTB &= 0b00000000;	
+void sendZero() {
+	PORTB &= 0b00000000;
 	
 	// Put 7 clock cycle low timer here
 	TCNT0 = -7;
