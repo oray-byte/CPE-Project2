@@ -1,32 +1,3 @@
-
-Skip to content
-Pull requests
-Issues
-Marketplace
-Explore
-@oray-byte
-oray-byte /
-CPE-Project2
-Public
-
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-
-    Settings
-
-CPE-Project2/Task2.c
-@elloGarrett
-elloGarrett Working strobe() and emitSound()
-Latest commit eccbb0f 5 hours ago
-History
-1 contributor
-237 lines (168 sloc) 4.01 KB
 #include "avr/io.h"
 #include "avr/interrupt.h"
 
@@ -55,23 +26,61 @@ void stopTimer();
 
 void emitSound();
 
+void soundDelay();
+
+bool buttonPush();
 
 int main() {
 	DDRB |= (1<<0);
 	PORTB &= 0;
-	DDRC |= 0b01000000; //Speaker on PD6
+    DDRD &= 0b11101111;
+    PORTD |= 0b00010000;
+	DDRC |= 0b01000000; //Speaker on PC6
+    bool pressed;
 	
 	initNeo();
 	
 	while(1) {
-		emitSound();
-		//strobe();
+        if (buttonPush()) {
+            int _i;
+            for (_i = 0; _i < 20; _i++) {
+                for (int _j = 0; _j < 10; _j++) {
+                    TCNT0 = 0xFE;
+                    TCCR0A = 0x00;
+                    TCCR0B = 0x05;
+                    while ((TIFR0 & (1<<TOV0)) == 0) {
+                        if (buttonPush()) {
+                            pressed = true;
+                            break;
+                        }
+                    }
+                }
+                if (pressed)
+                {
+                    break;
+                }
+            }
+
+            while (!buttonPush() && (_i == 20)) {
+                strobe();
+                emitSound();
+            }
+        }
 	}
 	
 	return 0;
 }
 
+bool buttonPush() {
 
+    if (PIND & (1<<4)) {
+        emitSound();
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 void startTimer() {
 	PORTB &= 0b00000000;
 	
@@ -264,19 +273,3 @@ void sendZero() {
 	TCCR0A = 0;
 	TIFR0 = 0x1;
 }
-
-    © 2021 GitHub, Inc.
-
-    Terms
-    Privacy
-    Security
-    Status
-    Docs
-    Contact GitHub
-    Pricing
-    API
-    Training
-    Blog
-    About
-
-Loading complete
