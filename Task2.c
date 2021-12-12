@@ -26,23 +26,66 @@ void stopTimer();
 
 void emitSound();
 
+void soundDelay();
+
+int buttonPush();
 
 int main() {
 	DDRB |= (1<<0);
 	PORTB &= 0;
-	DDRC |= 0b01000000; //Speaker on PD6
+	DDRD &= 0b11101111; //Button on PD4
+	PORTD |= 0b00010000;
+	DDRC |= 0b01000000; //Speaker on PC6
+	int pressed = 0;
 	
 	initNeo();
 	
 	while(1) {
-		emitSound();
-		//strobe();
+		if (buttonPush()) {
+			int dimVal = 4;
+			int _i;
+			for (_i = 0; _i < 20; _i++) {
+				partDim(dimVal);
+				
+				dimVal += 4;
+				for (int _j = 0; _j < 10; _j++) {
+					TCNT0 = 0xFE;
+					TCCR0A = 0x00;
+					TCCR0B = 0x05;
+					while ((TIFR0 & (1<<TOV0)) == 0) {
+						if (buttonPush()) {
+							pressed = 1;
+							break;
+						}
+					}
+				}
+				if (pressed)
+				{
+					pressed = 0;
+					break;
+				}
+			}
+
+			while (buttonPush() != 1 && (_i == 20)) {
+				strobe();
+				emitSound();
+			}
+		}
 	}
 	
 	return 0;
 }
 
+int buttonPush() {
 
+	if (PIND & (1<<4)) {
+		emitSound();
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
 void startTimer() {
 	PORTB &= 0b00000000;
 	
@@ -63,7 +106,7 @@ void stopTimer() {
 
 void emitSound() {
 	PORTC |= 0b01000000;
-	soundDelay();	
+	soundDelay();
 	PORTC &= 0b00000000;
 	soundDelay();
 }
@@ -202,6 +245,13 @@ void sendOne() {
 	TCCR0A = 0;
 	TIFR0 = 0x1; // Clear the timer
 
+}
+
+void partDim(int x) {
+	for(int i = 0; i < 10; i++){
+		sendPixels(x, x, x);
+	}
+	delay();
 }
 
 void allGreen() {
